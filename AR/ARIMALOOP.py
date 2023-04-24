@@ -76,8 +76,8 @@ best_model = None
 best_rmse = np.inf
 
 # loop over different values of p and q to find the best model
-for p in range(2, 25):
-    for q in range(2, 25):
+for p in range(1, 25):
+    for q in range(1, 25):
         for d in range(1, 3):
             # fit ARIMA model
             model = ARIMA(data['Close'], order=(p, d, q))
