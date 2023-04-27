@@ -2,18 +2,32 @@ from math import sqrt
 
 import pandas as pd
 import statsmodels.api as sm
-from matplotlib import pyplot
+from matplotlib import pyplot, pyplot as plt
 from pandas.plotting import lag_plot
 from sklearn.metrics import mean_squared_error
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.ar_model import AutoReg
 
 data = pd.read_csv('E:\четвертый курс\Дипломка\DiplomaSeries\AR\AAPL.csv', usecols=['Date', 'Close'])
+# Null values check
+if data.isnull().values.any():
+    print("Null values are in the file")
+    # Null values interpolation
+    data = data.interpolate()
+else:
+    print("No null values are in the file")
+
+# deleting duplicating values
+data = data.drop_duplicates()
+# convert Date column to datetime object
+data['Date'] = pd.to_datetime(data['Date'])
 data.set_index('Date', inplace=True)
+
 print(data.head())
 print(data.tail())
 # plot the raw data
 data.plot()
+pyplot.title("Apple Inc Stock price")
 pyplot.show()
 
 # seaonal decompose
@@ -96,7 +110,7 @@ pyplot.show()
 pyplot.gcf().autofmt_xdate()
 
 # plot forecasts against actual outcomes
-pyplot.plot(data.index[-21:-7], data['Close'][-21:-7], label='Actual')
+pyplot.plot(data.index, data['Close'], label='Actual')
 pyplot.plot(data.index[-7:], predictions, color='red', label='Predicted')
 pyplot.legend()
 pyplot.xlabel('Date')
@@ -105,6 +119,7 @@ pyplot.xticks(rotation=-45)
 
 pyplot.show()
 pyplot.gcf().autofmt_xdate()
+
 
 # Convert test to DataFrame
 test_df = pd.DataFrame(test, index=data.index[-len(test):], columns=['Close'])

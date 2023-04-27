@@ -72,7 +72,7 @@ pyplot.plot(predictions[0:100], color='red', label='Predicted')
 pyplot.show()
 
 # plot original data up to 7 days before the end of the dataset
-pyplot.plot(data.index[-21:-7], data['Close'][-21:-7], label='Actual')
+pyplot.plot(data.index, data['Close'], label='Actual')
 
 # plot predictions starting from 7 days before the end of the dataset
 pyplot.plot(data.index[-7:], predictions[-7:], color='red', label='Predicted')

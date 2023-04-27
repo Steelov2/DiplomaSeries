@@ -77,7 +77,7 @@ best_model = None
 best_rmse = np.inf
 for p in [11, 18]:
     for q in [11, 18]:
-        for d in [1, 2]:
+        for d in [0]:
             # fit ARIMA model
             model = ARIMA(data['Close'], order=(p, d, q))
             model_fit = model.fit()
@@ -91,7 +91,7 @@ for p in [11, 18]:
                 best_model = model_fit
                 best_rmse = rmse_val
 
-            print(f"ARIMA({p}, {d}, {q}) - RMSE: {rmse_val:.2f}")
+            print(f"ARMA({p}, {d}, {q}) - RMSE: {rmse_val:.2f}")
 
 # print summary of best model
 print("\nBest Model:")
@@ -102,7 +102,7 @@ test_preds = best_model.predict(start=test_data.index[0], end=test_data.index[-1
 plt.figure(figsize=(10, 6))
 plt.plot(test_data.index, test_data['Close'], label='Actual')
 plt.plot(test_data.index, test_preds, label='Predicted')
-plt.title('ARIMA Model - Test Data', fontsize=20)
+plt.title('ARMA Model - Test Data', fontsize=20)
 plt.xlabel('Date')
 plt.ylabel('Close')
 plt.show()
@@ -112,7 +112,7 @@ plt.figure(figsize=(10, 6))
 plt.plot(train_data.index, train_data['Close'], label='Train Data')
 plt.plot(test_preds.index, test_preds, label='Predicted')
 plt.plot(test_data.index, test_data['Close'], label='Test Data')
-plt.title('ARIMA Model - Test Data', fontsize=20)
+plt.title('ARMA Model - Test Data', fontsize=20)
 plt.xlabel('Date')
 plt.ylabel('Close Price')
 plt.legend()
