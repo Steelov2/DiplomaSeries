@@ -108,33 +108,33 @@ print(rmse)
 catfish_sales[['Close', 'forecast']].plot(figsize=(12, 8))
 plt.show()
 # автоарима/сарима
-# from pmdarima.arima import auto_arima
-#
-# # fit auto-ARIMA model
-# model = auto_arima(catfish_sales['Close'], seasonal=True, m=12, trace=True)
-#
-# # print model summary
-# print(model.summary())
-#
-# # make predictions
-# forecast = model.predict(n_periods=7)
-#
-# # calculate RMSE
-# rmse = np.sqrt(mean_squared_error(test_data['Close'], forecast))
-#
-# # print efficiency score
-# print(f'Efficiency: {100 * (1 - rmse / np.mean(test_data["Close"])):.2f}%')
-# print(rmse)
-#
-# # plot actual vs predicted
-# plt.figure(figsize=(12, 8))
-# plt.plot(train_data.index, catfish_sales['Close'], label='Actual Price')
-# plt.plot(test_data.index, forecast, label='Forecast')
-# plt.legend(loc='best')
-# plt.show()
-#
-# for i in range(len(forecast)):
-#     print(f"predicted={forecast[i]:.6f}, expected={catfish_sales['Close'][i]:.6f}")
-# rmse_val = rmse(forecast, catfish_sales['Close'])
-# efficiency = (1 - (rmse_val / test_data['Close'].mean())) * 100
-# print("RMSE = {:.2f}, Efficiency = {:.2f}%".format(rmse_val, efficiency))
+from pmdarima.arima import auto_arima
+
+# fit auto-ARIMA model
+model = auto_arima(catfish_sales['Close'], seasonal=True, m=12, trace=True)
+
+# print model summary
+print(model.summary())
+
+# make predictions
+forecast = model.predict(n_periods=7)
+
+# calculate RMSE
+rmse = np.sqrt(mean_squared_error(test_data['Close'], forecast))
+
+# print efficiency score
+print(f'Efficiency: {100 * (1 - rmse / np.mean(test_data["Close"])):.2f}%')
+print(rmse)
+
+# plot actual vs predicted
+plt.figure(figsize=(12, 8))
+plt.plot(train_data.index, catfish_sales['Close'], label='Actual Price')
+plt.plot(test_data.index, forecast, label='Forecast')
+plt.legend(loc='best')
+plt.show()
+
+for i in range(len(forecast)):
+    print(f"predicted={forecast[i]:.6f}, expected={catfish_sales['Close'][i]:.6f}")
+rmse_val = rmse(forecast, catfish_sales['Close'])
+efficiency = (1 - (rmse_val / test_data['Close'].mean())) * 100
+print("RMSE = {:.2f}, Efficiency = {:.2f}%".format(rmse_val, efficiency))

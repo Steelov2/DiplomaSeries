@@ -128,3 +128,5 @@ test_df = pd.DataFrame(test, index=data.index[-len(test):], columns=['Close'])
 rmse_val = sqrt(mean_squared_error(test_df['Close'], predictions))
 efficiency = (1 - (rmse_val / test_df['Close'].mean())) * 100
 print("RMSE = {:.2f}, Efficiency = {:.2f}%".format(rmse_val, efficiency))
+
+print(model_fit.summary())
