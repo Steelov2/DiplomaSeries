@@ -74,8 +74,8 @@ plt.show()
 
 best_model = None
 best_rmse = np.inf
-for p in [11, 18]:
-    for q in [11, 18]:
+for p in [4]:
+    for q in [4,24]:
         for d in [1, 2]:
             # fit ARIMA model
             model = ARIMA(data['Close'], order=(p, d, q))

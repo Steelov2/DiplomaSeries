@@ -27,11 +27,11 @@ print(data.head())
 print(data.tail())
 # plot the raw data
 data.plot()
-pyplot.title("Apple Inc Stock price")
+pyplot.title("Apple Stock price")
 pyplot.show()
 
 # seaonal decompose
-decomposition = sm.tsa.seasonal_decompose(data, model='additive', period=25)
+decomposition = sm.tsa.seasonal_decompose(data, model='additive', period=30)
 trend = decomposition.trend
 seasonal = decomposition.seasonal
 residual = decomposition.resid
@@ -63,8 +63,8 @@ print(train)
 print("test")
 print(test)
 # train autoregression
-window = 29
-model = AutoReg(train, lags=29)
+window = 4
+model = AutoReg(train, lags=4)
 model_fit = model.fit()
 coef = model_fit.params
 
@@ -83,9 +83,6 @@ for t in range(len(test)):
     history.append(obs)
     print('predicted=%f, expected=%f' % (yhat, obs))
 
-# evaluate forecasts
-rmse = sqrt(mean_squared_error(test, predictions))
-print('Test RMSE: %.3f' % rmse)
 
 # plot forecasts against actual outcomes
 pyplot.plot(data.index[-7:], test, label='Actual')

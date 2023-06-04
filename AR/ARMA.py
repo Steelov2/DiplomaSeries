@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.stattools import adfuller
 
 warnings.filterwarnings('ignore')
@@ -75,8 +74,8 @@ plt.show()
 
 best_model = None
 best_rmse = np.inf
-for p in [11, 18]:
-    for q in [11, 18]:
+for p in [4]:
+    for q in [4,24]:
         for d in [0]:
             # fit ARIMA model
             model = ARIMA(data['Close'], order=(p, d, q))

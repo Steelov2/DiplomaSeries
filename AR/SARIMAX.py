@@ -1,140 +1,122 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from datetime import datetime
-from datetime import timedelta
-from pandas.plotting import register_matplotlib_converters
-from sklearn.metrics import mean_squared_error
-from statsmodels.tsa.stattools import acf, pacf
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-import statsmodels.api as sm
+import warnings
 
-register_matplotlib_converters()
-from time import time
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.stattools import adfuller
+
+warnings.filterwarnings('ignore')
 
 # read data
-catfish_sales = pd.read_csv('E:\четвертый курс\Дипломка\DiplomaSeries\AR\AAPL.csv', usecols=['Date', 'Close'])
-print(catfish_sales.tail())
-catfish_sales['Date'] = pd.to_datetime(catfish_sales['Date'])
-catfish_sales.set_index('Date', inplace=True)
+data = pd.read_csv('E:\четвертый курс\Дипломка\DiplomaSeries\AR\AAPL.csv', usecols=['Date', 'Close'])
+# infer the frequency of the data
 
-plt.figure(figsize=(10, 4))
-plt.plot(catfish_sales)
+# convert Date column to datetime object
+data['Date'] = pd.to_datetime(data['Date'])
+
+# set Date column as index
+data.set_index('Date', inplace=True)
+data.plot()
 plt.title('Stock prices', fontsize=20)
-plt.ylabel('Close', fontsize=16)
-
-# plt.show()
-
-#
-# def rmse(predictions, targets):
-#     return np.sqrt(((predictions - targets) ** 2).mean())
+plt.ylabel('Close price')
+plt.show()
 
 
-train_data = catfish_sales.iloc[:-7, :]
-test_data = catfish_sales.iloc[-7:, :]
+def rmse(predictions, targets):
+    return np.sqrt(((predictions - targets) ** 2).mean())
 
+
+# plot seasonal decomposition
+decomposition = sm.tsa.seasonal_decompose(data, model='additive', period=25)
+trend = decomposition.trend
+seasonal = decomposition.seasonal
+residual = decomposition.resid
+
+fig = decomposition.plot()
+fig.set_size_inches(14, 7)
+plt.show()
+
+# print test statistics
+result = adfuller(data)
+print('ADF Statistic:', result[0])
+print('p-value:', result[1])
+print('Critical Values:')
+for key, value in result[4].items():
+    print('\t%s: %.3f' % (key, value))
+
+train_data = data.iloc[:-7, :]
+test_data = data.iloc[-7:, :]
 print(train_data.tail())
 print(test_data)
 
-first_diff = catfish_sales.diff()[1:]
-plt.figure(figsize=(10, 4))
-plt.plot(first_diff)
-plt.title('Stock prices', fontsize=20)
-plt.ylabel('Close', fontsize=16)
+# plot ACF and PACF
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
-# plt.show()
-
-acf_vals = acf(first_diff)
-num_lags = 20
-plt.bar(range(num_lags), acf_vals[:num_lags])
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+plot_acf(data.Close.diff().dropna(), ax=ax1)
+plot_pacf(data.Close.diff().dropna(), ax=ax2)
 plt.show()
 
-pacf_vals = pacf(first_diff)
-num_lags = 15
-plt.bar(range(num_lags), pacf_vals[:num_lags])
+# Original Series
+fig, (ax1, ax2, ax3) = plt.subplots(3)
+ax1.plot(data.Close)
+ax1.set_title('Original Series')
+ax1.axes.xaxis.set_visible(False)
+# 1st Differencing
+ax2.plot(data.Close.diff())
+ax2.set_title('1st Order Differencing')
+ax2.axes.xaxis.set_visible(False)
+# 2nd Differencing
+ax3.plot(data.Close.diff().diff())
+ax3.set_title('2nd Order Differencing')
 plt.show()
 
-train_end = datetime(2023, 4, 12)
-test_end = datetime(2023, 4, 21)
+best_model = None
+best_rmse = np.inf
 
-# my_order = (0, 1, 0)
-# my_seasonal_order = (1, 0, 1, 12)
-# # define model
-# model = SARIMAX(train_data, order=my_order, seasonal_order=my_seasonal_order)
-# # fit the model
-# start = time()
-# model_fit = model.fit()
-# end = time()
-# print('Model Fitting Time:', end - start)
-# print(model_fit.summary())
-#
-# # get the predictions and residuals
-# predictions = model_fit.forecast(len(test_data))
-# predictions = pd.Series(predictions, index=test_data.index)
-# residuals = test_data - predictions
-# print(predictions.dropna())
-# plt.figure(figsize=(10, 4))
-#
-# plt.plot(catfish_sales)
-# plt.plot(predictions)
-#
-# plt.legend(('Data', 'Predictions'), fontsize=16)
-#
-# plt.title('Catfish Sales in 1000s of Pounds', fontsize=20)
-# plt.ylabel('Production', fontsize=16)
-#
-# plt.show()
+# fit ARIMA model
+model = SARIMAX(data['Close'], order=(11, 1, 11), seasonal_order=(1, 0, 1, 12))
+model_fit = model.fit()
 
-model = sm.tsa.statespace.SARIMAX(catfish_sales['Close'], order=(11, 2, 11), seasonal_order=(1, 1, 1, 12))
-results = model.fit()
-print(results.summary())
+# calculate RMSE for test data
+test_preds = model_fit.predict(start=test_data.index[0], end=test_data.index[-1])
+rmse_val = rmse(test_preds, test_data['Close'])
 
-catfish_sales['forecast'] = results.predict(start=748, end=755, dynamic=True)
-catfish_sales[['Close', 'forecast']].plot(figsize=(12, 8))
+# update best model and minimum RMSE
+if rmse_val < best_rmse:
+    best_model = model_fit
+    best_rmse = rmse_val
+
+
+# print summary of best model
+print("\nBest Model:")
+print(best_model.summary())
+
+# plot predictions against actual values for test data
+test_preds = best_model.predict(start=test_data.index[0], end=test_data.index[-1])
+plt.figure(figsize=(10, 6))
+plt.plot(test_data.index, test_data['Close'], label='Actual')
+plt.plot(test_data.index, test_preds, label='Predicted')
+plt.title('ARIMA Model - Test Data', fontsize=20)
+plt.xlabel('Date')
+plt.ylabel('Close')
+plt.show()
+# plot predictions against actual values for test data
+
+plt.figure(figsize=(10, 6))
+plt.plot(train_data.index, train_data['Close'], label='Train Data')
+plt.plot(test_preds.index, test_preds, label='Predicted')
+plt.plot(test_data.index, test_data['Close'], label='Test Data')
+plt.title('ARIMA Model - Test Data', fontsize=20)
+plt.xlabel('Date')
+plt.ylabel('Close Price')
+plt.legend()
 plt.show()
 
-# calculate RMSE
-rmse = np.sqrt(mean_squared_error(catfish_sales['Close'].iloc[748:755], catfish_sales['forecast'].iloc[748:755]))
-
-# print actual and predicted values
-print('Actual\tPredicted')
-for i in range(748, 755):
-    print(f'{catfish_sales.iloc[i, 0]:.2f}\t{catfish_sales.iloc[i, 1]:.2f}')
-
-# print efficiency score
-print(f'Efficiency: {100 * (1 - rmse / np.mean(catfish_sales["Close"].iloc[748:755])):.2f}%')
-print(rmse)
-# plot actual vs predicted
-catfish_sales[['Close', 'forecast']].plot(figsize=(12, 8))
-plt.show()
-# автоарима/сарима
-from pmdarima.arima import auto_arima
-
-# fit auto-ARIMA model
-model = auto_arima(catfish_sales['Close'], seasonal=True, m=12, trace=True)
-
-# print model summary
-print(model.summary())
-
-# make predictions
-forecast = model.predict(n_periods=7)
-
-# calculate RMSE
-rmse = np.sqrt(mean_squared_error(test_data['Close'], forecast))
-
-# print efficiency score
-print(f'Efficiency: {100 * (1 - rmse / np.mean(test_data["Close"])):.2f}%')
-print(rmse)
-
-# plot actual vs predicted
-plt.figure(figsize=(12, 8))
-plt.plot(train_data.index, catfish_sales['Close'], label='Actual Price')
-plt.plot(test_data.index, forecast, label='Forecast')
-plt.legend(loc='best')
-plt.show()
-
-for i in range(len(forecast)):
-    print(f"predicted={forecast[i]:.6f}, expected={catfish_sales['Close'][i]:.6f}")
-rmse_val = rmse(forecast, catfish_sales['Close'])
+for i in range(len(test_preds)):
+    print(f"predicted={test_preds[i]:.6f}, expected={test_data['Close'][i]:.6f}")
+rmse_val = rmse(test_preds, test_data['Close'])
 efficiency = (1 - (rmse_val / test_data['Close'].mean())) * 100
 print("RMSE = {:.2f}, Efficiency = {:.2f}%".format(rmse_val, efficiency))

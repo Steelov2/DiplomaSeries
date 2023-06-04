@@ -19,7 +19,7 @@ pyplot.show()
 
 
 # plot seasonal decomposition
-decomposition = sm.tsa.seasonal_decompose(data, model='additive', period=25)
+decomposition = sm.tsa.seasonal_decompose(data, model='additive', period=30)
 trend = decomposition.trend
 seasonal = decomposition.seasonal
 residual = decomposition.resid
@@ -44,7 +44,7 @@ plot_pacf(data.Close.diff().dropna(), ax=ax2)
 pyplot.show()
 # prepare situation
 X = data.values
-window = 3
+window = 1
 history = [X[i] for i in range(window)]
 test = [X[i] for i in range(window, len(X))]
 predictions = list()
